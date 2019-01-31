@@ -241,6 +241,7 @@ class EmbeddingIntentClassifier(Component):
                                for intent in intents
                                for token in intent.split(
                                         intent_split_symbol)])
+        print("Hello")
         return {token: idx
                 for idx, token in enumerate(sorted(distinct_tokens))}
 
@@ -438,7 +439,7 @@ class EmbeddingIntentClassifier(Component):
         """Train tf graph"""
 
         self.session.run(tf.global_variables_initializer())
-
+        print("running...")
         if self.evaluate_on_num_examples:
             logger.info("Accuracy is updated every {} epochs"
                         "".format(self.evaluate_every_num_epochs))
@@ -447,6 +448,20 @@ class EmbeddingIntentClassifier(Component):
         train_acc = 0
         last_loss = 0
         for ep in pbar:
+            print("number 1")
+            total_parameters = 0
+            for variable in tf.trainable_variables():
+                # shape is an array of tf.Dimension
+                shape = variable.get_shape()
+                print(shape)
+                print(len(shape))
+                variable_parameters = 1
+                for dim in shape:
+                    print(dim)
+                    variable_parameters *= dim.value
+                print(variable_parameters)
+                total_parameters += variable_parameters
+            print(total_parameters)
             indices = np.random.permutation(len(X))
 
             batch_size = self._linearly_increasing_batch_size(ep)
@@ -525,9 +540,11 @@ class EmbeddingIntentClassifier(Component):
         self.inv_intent_dict = {v: k for k, v in intent_dict.items()}
         self.encoded_all_intents = self._create_encoded_intents(
                                         intent_dict)
+        print("Encoded intents")
 
         X, Y, intents_for_X = self._prepare_data_for_training(
                                 training_data, intent_dict)
+        print("prepared data")
 
         # check if number of negatives is less than number of intents
         logger.debug("Check if num_neg {} is smaller than "
@@ -563,7 +580,7 @@ class EmbeddingIntentClassifier(Component):
 
             # train tensorflow graph
             self.session = tf.Session()
-
+            print("Starting training")
             self._train_tf(X, Y, intents_for_X,
                            loss, is_training, train_op)
 
