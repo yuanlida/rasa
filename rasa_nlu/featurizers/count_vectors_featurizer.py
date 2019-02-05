@@ -252,7 +252,6 @@ class CountVectorsFeaturizer(Featurizer):
         except ValueError:
             self.vect = None
             return
-        print("===> Num tokens: {}".format(len(self.vect.vocabulary_.keys())))
         for i, example in enumerate(training_data.intent_examples):
             # create bag for each example
             example.set("text_features",

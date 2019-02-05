@@ -241,7 +241,6 @@ class EmbeddingIntentClassifier(Component):
                                for intent in intents
                                for token in intent.split(
                                         intent_split_symbol)])
-        print("Hello")
         return {token: idx
                 for idx, token in enumerate(sorted(distinct_tokens))}
 
@@ -254,13 +253,16 @@ class EmbeddingIntentClassifier(Component):
 
         if self.intent_tokenization_flag:
             intent_token_dict = self._create_intent_token_dict(
-                list(intent_dict.keys()), self.intent_split_symbol)
+                list(self.inv_intent_dict.values()), self.intent_split_symbol)
 
             encoded_all_intents = np.zeros((len(intent_dict),
                                             len(intent_token_dict)))
             for key, idx in intent_dict.items():
                 for t in key.split(self.intent_split_symbol):
-                    encoded_all_intents[idx, intent_token_dict[t]] = 1
+                    try:
+                        encoded_all_intents[idx, intent_token_dict[t]] = 1
+                    except KeyError:
+                        pass
 
             return encoded_all_intents
         else:
@@ -439,7 +441,6 @@ class EmbeddingIntentClassifier(Component):
         """Train tf graph"""
 
         self.session.run(tf.global_variables_initializer())
-        print("running...")
         if self.evaluate_on_num_examples:
             logger.info("Accuracy is updated every {} epochs"
                         "".format(self.evaluate_every_num_epochs))
@@ -448,20 +449,6 @@ class EmbeddingIntentClassifier(Component):
         train_acc = 0
         last_loss = 0
         for ep in pbar:
-            print("number 1")
-            total_parameters = 0
-            for variable in tf.trainable_variables():
-                # shape is an array of tf.Dimension
-                shape = variable.get_shape()
-                print(shape)
-                print(len(shape))
-                variable_parameters = 1
-                for dim in shape:
-                    print(dim)
-                    variable_parameters *= dim.value
-                print(variable_parameters)
-                total_parameters += variable_parameters
-            print(total_parameters)
             indices = np.random.permutation(len(X))
 
             batch_size = self._linearly_increasing_batch_size(ep)
@@ -540,11 +527,9 @@ class EmbeddingIntentClassifier(Component):
         self.inv_intent_dict = {v: k for k, v in intent_dict.items()}
         self.encoded_all_intents = self._create_encoded_intents(
                                         intent_dict)
-        print("Encoded intents")
 
         X, Y, intents_for_X = self._prepare_data_for_training(
                                 training_data, intent_dict)
-        print("prepared data")
 
         # check if number of negatives is less than number of intents
         logger.debug("Check if num_neg {} is smaller than "
@@ -580,7 +565,6 @@ class EmbeddingIntentClassifier(Component):
 
             # train tensorflow graph
             self.session = tf.Session()
-            print("Starting training")
             self._train_tf(X, Y, intents_for_X,
                            loss, is_training, train_op)
 
@@ -616,7 +600,7 @@ class EmbeddingIntentClassifier(Component):
     def process(self, message, **kwargs):
         # type: (Message, Any) -> None
         """Return the most likely intent and its similarity to the input."""
-
+        from rasa_nlu.training_data import load_data
         intent = {"name": None, "confidence": 0.0}
         intent_ranking = []
 
@@ -626,24 +610,45 @@ class EmbeddingIntentClassifier(Component):
                          "didn't receive enough training data")
 
         else:
+            # train_intent_dict = self.
             # get features (bag of words) for a message
             X = message.get("text_features").reshape(1, -1)
+            # print(X.shape)
+            # print(self.encoded_all_intents.shape)
+            # print(self.encoded_all_intents)
+            # asdf
+            # test_data = load_data("~/conv_embeddings/data/test/valid_personachat_other_original_nlu.md")
+            full_data = load_data("/data/full_10000")
+            full_intent_dict = self._create_intent_dict(full_data)
+            # original_dict = {v: k for k, v in self.inv_intent_dict.items()}
+            # original_dict.update(test_intent_dict)
+            # self.inv_intent_dict = {v: k for k, v in original_dict.items()}
+
+            self.encoded_all_intents = self._create_encoded_intents(full_intent_dict)
+            print(len(self.inv_intent_dict.keys()))
+            inv_intent_dict = {v: k for k, v in full_intent_dict.items()}
+            print(len(inv_intent_dict.keys()))
+            # print(self.encoded_all_intents.shape)
+            # print(self.encoded_all_intents)
+            # asdf
 
             # stack encoded_all_intents on top of each other
             # to create candidates for test examples
             all_Y = self._create_all_Y(X.shape[0])
 
             # load tf graph and session
+            # print(X.shape)
+            # print(all_Y.shape)
             intent_ids, message_sim = self._calculate_message_sim(X, all_Y)
 
             # if X contains all zeros do not predict some label
             if X.any() and intent_ids.size > 0:
-                intent = {"name": self.inv_intent_dict[intent_ids[0]],
+                intent = {"name": inv_intent_dict[intent_ids[0]],
                           "confidence": message_sim[0]}
 
                 ranking = list(zip(list(intent_ids), message_sim))
                 ranking = ranking[:INTENT_RANKING_LENGTH]
-                intent_ranking = [{"name": self.inv_intent_dict[intent_idx],
+                intent_ranking = [{"name": inv_intent_dict[intent_idx],
                                    "confidence": score}
                                   for intent_idx, score in ranking]
 
