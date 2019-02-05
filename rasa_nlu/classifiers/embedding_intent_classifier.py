@@ -618,7 +618,7 @@ class EmbeddingIntentClassifier(Component):
             # print(self.encoded_all_intents)
             # asdf
             # test_data = load_data("~/conv_embeddings/data/test/valid_personachat_other_original_nlu.md")
-            full_data = load_data("/data/full_10000")
+            full_data = load_data("data/full_10000")
             full_intent_dict = self._create_intent_dict(full_data)
             # original_dict = {v: k for k, v in self.inv_intent_dict.items()}
             # original_dict.update(test_intent_dict)
