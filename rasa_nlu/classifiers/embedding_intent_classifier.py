@@ -393,7 +393,10 @@ class EmbeddingIntentClassifier(Component):
         Where the first is correct intent
         and the rest are wrong intents sampled randomly
         """
-
+        # print(batch_pos_b.shape)
+        # print(self.encoded_all_intents.shape)
+        # lkjasd
+        batch_pos_og = batch_pos_b
         batch_pos_b = batch_pos_b[:, np.newaxis, :]
 
         # sample negatives
@@ -402,9 +405,25 @@ class EmbeddingIntentClassifier(Component):
         for b in range(batch_pos_b.shape[0]):
             # create negative indexes out of possible ones
             # except for correct index of b
-            negative_indexes = [i for i in range(
-                                    self.encoded_all_intents.shape[0])
-                                if i != intent_ids[b]]
+            negative_indexes = []
+            unique_b = [x for x, y in enumerate(self.encoded_all_intents[b]) if y > 0]
+            for i in range(self.encoded_all_intents.shape[0]):
+                unique_i = [x for x, y in enumerate(self.encoded_all_intents[i]) if y > 0]
+                # print(unique_i)
+                # print(unique_b)
+                merged_bi = unique_b + unique_i
+                overlap_bi = len(set([y for y in merged_bi if merged_bi.count(y) > 1]))
+                # print(overlap_bi)
+                unique_bi = len(list(set(merged_bi)))
+                # print(unique_bi)
+
+                if overlap_bi/unique_bi < 0.33:
+                    negative_indexes.append(i)
+            # print("Negative index length==>")
+            # print(len(negative_indexes))
+            # negative_indexes = [i for i in range(
+            #                         self.encoded_all_intents.shape[0])
+            #                     if i != intent_ids[b]]
             negs = np.random.choice(negative_indexes, size=self.num_neg)
 
             batch_neg_b[b] = self.encoded_all_intents[negs]
@@ -625,9 +644,9 @@ class EmbeddingIntentClassifier(Component):
             # self.inv_intent_dict = {v: k for k, v in original_dict.items()}
 
             self.encoded_all_intents = self._create_encoded_intents(full_intent_dict)
-            print(len(self.inv_intent_dict.keys()))
+            # print(len(self.inv_intent_dict.keys()))
             inv_intent_dict = {v: k for k, v in full_intent_dict.items()}
-            print(len(inv_intent_dict.keys()))
+            # print(len(inv_intent_dict.keys()))
             # print(self.encoded_all_intents.shape)
             # print(self.encoded_all_intents)
             # asdf
