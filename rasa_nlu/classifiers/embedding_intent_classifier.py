@@ -491,6 +491,8 @@ class EmbeddingIntentClassifier(Component):
 
     def _create_batch_b(self, batch_pos_b: np.ndarray,
                         intent_ids: np.ndarray) -> np.ndarray:
+
+        import collections
         """Create batch of intents.
 
         Where the first is correct intent
@@ -513,24 +515,28 @@ class EmbeddingIntentClassifier(Component):
             # except for correct index of b
 
             positive_b = np.sum([x for x in self.encoded_all_intents[b] if -1 not in x], axis=0)
-            unique_b = [x for x, y in enumerate(positive_b) if y > 0]
+            unique_b = np.nonzero(positive_b)[0]
+            # unique_b = [x for x, y in enumerate(positive_b) if y > 0]
             negative_indexes = []
 
             for i in range(self.encoded_all_intents.shape[0]):
                 negative_i = np.sum([x for x in self.encoded_all_intents[i] if -1 not in x], axis=0)
-                unique_i = [x for x, y in enumerate(negative_i) if y > 0]
-                merged_bi = unique_b + unique_i
-                overlap_bi = len(set([y for y in merged_bi if merged_bi.count(y) > 1]))
-
+                unique_i = np.nonzero(negative_i)[0]
+                # print(unique_i)
+                merged_bi = np.concatenate((unique_b, unique_i), axis=0)
+                # print(merged_bi)
                 unique_bi = len(list(set(merged_bi)))
-
+                overlap_bi = len([item for item, count in collections.Counter(merged_bi).items() if count > 1])
+                # print(overlap_bi)
+                # print(unique_bi)
                 if overlap_bi/unique_bi < 0.33:
                     negative_indexes.append(i)
-
+            print(len(negative_indexes))
             negs = np.random.choice(negative_indexes, size=self.num_neg)
 
             batch_neg_b[b] = self.encoded_all_intents[negs]
 
+        print("finished neg samples")
         return np.concatenate([batch_pos_b, batch_neg_b], 1)
 
     def _linearly_increasing_batch_size(self, epoch: int) -> int:
