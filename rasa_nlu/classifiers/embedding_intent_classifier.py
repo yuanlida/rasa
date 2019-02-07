@@ -464,7 +464,8 @@ class EmbeddingIntentClassifier(Component):
         Where the first is correct intent
         and the rest are wrong intents sampled randomly
         """
-
+        print(batch_pos_b.shape)
+        print(batch_pos_b)
         batch_pos_b = np.expand_dims(batch_pos_b, axis=1)
 
         # sample negatives
@@ -478,9 +479,22 @@ class EmbeddingIntentClassifier(Component):
         for b in range(batch_pos_b.shape[0]):
             # create negative indexes out of possible ones
             # except for correct index of b
-            negative_indexes = [i for i in
-                                range(self.encoded_all_intents.shape[0])
-                                if i != intent_ids[b]]
+
+            positive_b = np.sum([x for x in self.encoded_all_intents[b] if -1 not in x], axis=0)
+            unique_b = [x for x, y in enumerate(positive_b) if y > 0]
+            negative_indexes = []
+
+            for i in range(self.encoded_all_intents.shape[0]):
+                negative_i = np.sum([x for x in self.encoded_all_intents[i] if -1 not in x], axis=0)
+                unique_i = [x for x, y in enumerate(negative_i) if y > 0]
+                merged_bi = unique_b + unique_i
+                overlap_bi = len(set([y for y in merged_bi if merged_bi.count(y) > 1]))
+
+                unique_bi = len(list(set(merged_bi)))
+
+                if overlap_bi/unique_bi < 0.33:
+                    negative_indexes.append(i)
+
             negs = np.random.choice(negative_indexes, size=self.num_neg)
 
             batch_neg_b[b] = self.encoded_all_intents[negs]
