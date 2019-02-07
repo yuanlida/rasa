@@ -464,8 +464,8 @@ class EmbeddingIntentClassifier(Component):
         Where the first is correct intent
         and the rest are wrong intents sampled randomly
         """
-        print(batch_pos_b.shape)
-        print(batch_pos_b)
+        # print(batch_pos_b.shape)
+        # print(batch_pos_b)
         batch_pos_b = np.expand_dims(batch_pos_b, axis=1)
 
         # sample negatives
