@@ -411,7 +411,7 @@ class EmbeddingIntentClassifier(Component):
                          a_in: 'tf.Tensor',
                          b_in: 'tf.Tensor',
                          is_training: 'tf.Tensor',
-                         negs,
+                         negs_in,
                          ) -> Tuple['tf.Tensor', 'tf.Tensor']:
         """Create tf graph for training"""
 
@@ -444,7 +444,7 @@ class EmbeddingIntentClassifier(Component):
             def sample_neg_b():
                 all_b = emb_b[tf.newaxis, :, 0, :]
                 all_b = tf.tile(all_b, [tf.shape(emb_b)[0], 1, 1])
-                neg_b = tf.matmul(negs, all_b)
+                neg_b = tf.matmul(negs_in, all_b)
                 return tf.concat([emb_b, neg_b], 1)
 
             emb_b = tf.cond(is_training, sample_neg_b, lambda: emb_b)
@@ -553,16 +553,32 @@ class EmbeddingIntentClassifier(Component):
         return np.concatenate([batch_pos_b, batch_neg_b], 1)
 
     def _negs_from_batch(self, batch_pos_b: np.ndarray) -> np.ndarray:
-        """Find incorrect intents in the batch
-        """
+        """Find incorrect intents in the batch."""
 
+        import collections
         negs = []
         for b in batch_pos_b:
+            positive_b = np.sum([x for x in b if -1 not in x], axis=0)
+            unique_b = np.nonzero(positive_b)[0]
+
+            negative_indexes = []
+            for i in range(batch_pos_b.shape[0]):
+                negative_i = np.sum([x for x in batch_pos_b[i] if -1 not in x], axis=0)
+                unique_i = np.nonzero(negative_i)[0]
+
+                merged_bi = np.concatenate((unique_b, unique_i), axis=0)
+
+                unique_bi = float(len(list(set(merged_bi))))
+                overlap_bi = float(len([item for item, count in collections.Counter(merged_bi).items() if count > 1]))
+
+                if overlap_bi / unique_bi < 0.33:
+                    negative_indexes.append(i)
+
             # create negative indexes out of possible ones
             # except for correct index of b
-            negative_indexes = [i for i in
-                                range(batch_pos_b.shape[0])
-                                if not np.array_equal(batch_pos_b[i], b)]
+            # negative_indexes = [i
+            #                     for i in range(batch_pos_b.shape[0])
+            #                     if not np.array_equal(batch_pos_b[i], b)]
             negs_ids = np.random.choice(negative_indexes, size=self.num_neg)
             negs.append(np.eye(batch_pos_b.shape[0])[negs_ids])
 
