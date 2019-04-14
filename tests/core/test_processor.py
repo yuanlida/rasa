@@ -1,9 +1,10 @@
+import asyncio
 import datetime
-import pytest
 import uuid
+
+import pytest
 from aioresponses import aioresponses
 
-import asyncio
 from rasa.core import jobs
 from rasa.core import utils
 from rasa.core.channels import CollectingOutputChannel, UserMessage
@@ -16,10 +17,10 @@ from rasa.core.events import (
     BotUttered,
     Restarted,
 )
-from rasa.core.processor import MessageProcessor
 from rasa.core.interpreter import RasaNLUHttpInterpreter
+from rasa.core.processor import MessageProcessor
+from rasa.core.trackers import EventVerbosity
 from rasa.utils.endpoints import EndpointConfig
-
 from tests.utilities import json_of_latest_request, latest_request
 
 
@@ -53,6 +54,26 @@ async def test_parsing(default_processor):
     parsed = await default_processor._parse_message(message)
     assert parsed["intent"]["name"] == "greet"
     assert parsed["entities"][0]["entity"] == "name"
+
+
+async def test_restart_intent_triggers_restart(default_processor):
+    sender_id = 'random_sender_id'
+
+    # send greet message
+    message = UserMessage('/greet', sender_id=sender_id)
+    _ = await default_processor.log_message(message)
+
+    # send restart message
+    message = UserMessage('/restart', sender_id=sender_id)
+    _ = await default_processor.log_message(message)
+
+    tracker = default_processor._get_tracker(sender_id)
+
+    # tracker state with event verbosity ALL yields both events
+    assert len(tracker.current_state(EventVerbosity.ALL).events()) == 2
+
+    # tracker state with event verbosity AFTER_RESTART yields no events
+    assert len(tracker.current_state(EventVerbosity.AFTER_RESTART).events()) == 0
 
 
 async def test_http_parsing():

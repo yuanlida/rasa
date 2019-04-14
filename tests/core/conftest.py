@@ -12,6 +12,7 @@ from rasa.core.dispatcher import Dispatcher
 from rasa.core.domain import Domain
 from rasa.core.interpreter import RegexInterpreter
 from rasa.core.nlg import TemplatedNaturalLanguageGenerator
+from rasa.core.policies import MappingPolicy
 from rasa.core.policies.ensemble import PolicyEnsemble, SimplePolicyEnsemble
 from rasa.core.policies.memoization import (
     AugmentedMemoizationPolicy,
@@ -133,7 +134,8 @@ def default_dispatcher_collecting(default_nlg):
 async def default_processor(default_domain, default_nlg):
     agent = Agent(
         default_domain,
-        SimplePolicyEnsemble([AugmentedMemoizationPolicy()]),
+        SimplePolicyEnsemble([AugmentedMemoizationPolicy(),
+                              MappingPolicy()]),
         interpreter=RegexInterpreter(),
     )
 
