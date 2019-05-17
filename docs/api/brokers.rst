@@ -11,7 +11,7 @@ emits events into the event queue. It becomes part of the ``TrackerStore``
 which you use when starting an ``Agent`` or launch ``rasa.core.run``.
 
 All events are streamed to the broker as serialised dictionaries every time
-the tracker updates it state. An example event emitted from the ``default``
+the tracker updates its state. An example event emitted from the ``default``
 tracker looks like this:
 
 .. code-block:: json
