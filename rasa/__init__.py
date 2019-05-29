@@ -10,3 +10,8 @@ from rasa.train import train
 from rasa.test import test
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
+
+logging.basicConfig(level = logging.INFO,format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+logger.info("rasa version is :{}".format(__version__))
+

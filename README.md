@@ -152,3 +152,18 @@ Copyright 2019 Rasa Technologies GmbH. [Copy of the license](LICENSE.txt).
 A list of the Licenses of the dependencies of the project can be found at
 the bottom of the
 [Libraries Summary](https://libraries.io/github/RasaHQ/rasa).
+
+
+sudo pip install -r requirements.txt --user
+sudo pip install -e . --user
+
+pip install --upgrade pip
+
+git clone https://github.com/RasaHQ/rasa.git
+cd rasa
+pip install -r requirements.txt
+pip install -e .
+
+pip install rasa[spacy]
+python -m spacy download en_core_web_md
+python -m spacy link en_core_web_md en
