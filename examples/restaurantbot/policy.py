@@ -8,8 +8,10 @@ logger = logging.getLogger(__name__)
 class RestaurantPolicy(KerasPolicy):
     def model_architecture(self, input_shape, output_shape):
         """Build a Keras model and return a compiled model."""
-        from tensorflow.keras.models import Sequential
-        from tensorflow.keras.layers import (
+        # from tensorflow.keras.models import Sequential
+        # from tensorflow.keras.layers import (
+        from keras.models import Sequential
+        from keras.layers import (
             Masking,
             LSTM,
             Dense,

@@ -106,8 +106,10 @@ class KerasPolicy(Policy):
     ) -> tf.keras.models.Sequential:
         """Build a keras model and return a compiled model."""
 
-        from tensorflow.keras.models import Sequential
-        from tensorflow.keras.layers import (
+        # from tensorflow.keras.models import Sequential
+        # from tensorflow.keras.layers import (
+        from keras.models import Sequential
+        from keras.layers import (
             Masking,
             LSTM,
             Dense,
@@ -291,7 +293,8 @@ class KerasPolicy(Policy):
 
     @classmethod
     def load(cls, path: Text) -> "KerasPolicy":
-        from tensorflow.keras.models import load_model
+        # from tensorflow.keras.models import load_model
+        from keras.models import load_model
 
         if os.path.exists(path):
             featurizer = TrackerFeaturizer.load(path)
