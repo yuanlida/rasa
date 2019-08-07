@@ -11,8 +11,8 @@ import asyncio
 
 if __name__ == "__main__":
     os.chdir('/Users/lidayuan/Documents/edison/rasa/examples/moodbot')
-    # rasa.train(domain='domain.yml', config='config.yml', training_files='./data')
-    rasa.run(model="models", endpoints="endpoints.yml")
+    rasa.train(domain='domain.yml', config='config.yml', training_files='./data')
+    # rasa.run(model="models", endpoints="endpoints.yml")
     # loop = asyncio.get_event_loop()
     # loop.run_until_complete(
     #     rasa.core.visualize(config_path="config.yml",
