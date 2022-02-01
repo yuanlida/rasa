@@ -8,7 +8,7 @@ pytest-cov==2.5.1
 pytest-twisted==1.6
 pytest_localserver==0.4.1
 pytest_sanic==0.1.12
-treq==17.8.0
+treq==22.1.0
 responses==0.9.0
 httpretty==0.9.5
 freezegun==0.3.10
